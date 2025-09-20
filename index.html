@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather APP</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="card">
+    <div class="search">
+      <input type="text" placeholder="Enter city name" spellcheck="false" />
+      <button>
+        <img src="images/search.png" alt="Search" />
+      </button>
+    </div>
+    <div class="error">City not found</div>
+
+    <div class="weather"> <!-- lowercase 'weather' -->
+      <img src="images/rain.png" class="weather-icon" alt="Weather Icon" />
+      <h1 class="temp">22°C</h1>
+      <h2 class="city">Bangalore</h2>
+
+      <div class="details">
+        <div class="col">
+          <img src="images/humidity.png" alt="Humidity" />
+          <div>
+            <p class="humidity">50%</p>
+            <p>Humidity</p>
+          </div>
+        </div>
+        <div class="col">
+          <img src="images/wind.png" alt="Wind Speed" />
+          <div>
+            <p class="wind">15 km/h</p> <!-- fixed class name -->
+            <p>Wind Speed</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const apiKey = "8866269270951ad01ca50a748b8590f4";
+    const apiUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&q=";
+
+    const searchBox = document.querySelector(".search input");
+    const searchBtn = document.querySelector(".search button");
+    const weatherIcon = document.querySelector(".weather-icon");
+
+    async function checkWeather(city) {
+      const response = await fetch(apiUrl + city + `&appid=${apiKey}`);
+      if(response.status == 404) {
+        document.querySelector(".error").style.display = "block";
+        document.querySelector(".weather").style.display = "none";
+        return;
+      }
+      const data = await response.json();
+
+      /*console.log(data);*/ /* we can't see entire data in console, so commenting it out */
+
+      document.querySelector(".city").innerHTML = data.name;
+      document.querySelector(".temp").innerHTML = Math.round(data.main.temp) + "°C";
+      document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
+      document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
+
+      const condition = data.weather[0].main;
+
+      if (condition === "Clouds") {
+        weatherIcon.src = "images/clouds.png";
+      } else if (condition === "Clear") {
+        weatherIcon.src = "images/clear.png";
+      } else if (condition === "Rain") {
+        weatherIcon.src = "images/rain.png";
+      } else if (condition === "Drizzle") {
+        weatherIcon.src = "images/drizzle.png";
+      } else if (condition === "Mist") {
+        weatherIcon.src = "images/mist.png";
+      } else {
+        weatherIcon.src = "images/default.png"; // fallback image
+      }
+      /* to see the search bar and when we enter a city name, it should show the weather of that city */
+      document.querySelector(".weather").style.display = "block";
+    }
+
+    searchBtn.addEventListener("click", () => {
+      checkWeather(searchBox.value);
+    });
+
+    checkWeather(); // default city
+  </script>
+</body>
+</html>
