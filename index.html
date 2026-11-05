@@ -8,15 +8,15 @@
 </head>
 <body>
   <div class="card">
-    <div class="search">
-      <input type="text" placeholder="Enter city name" spellcheck="false" />
-      <button>
-        <img src="./search.png" alt="Search" />
+    <form class="search">
+      <input type="text" placeholder="Enter city name" spellcheck="false" aria-label="City name" />
+      <button type="submit" aria-label="Search weather">
+        <img src="./search.png" alt="" />
       </button>
-    </div>
-    <div class="error">City not found</div>
+    </form>
+    <div class="error" role="status">City not found</div>
 
-    <div class="weather"> <!-- lowercase 'weather' -->
+    <div class="weather" aria-live="polite"> <!-- lowercase 'weather' -->
       <img src="./rain.png" class="weather-icon" alt="Weather Icon" />
       <h1 class="temp">22°C</h1>
       <h2 class="city">Bangalore</h2>
@@ -42,55 +42,83 @@
 
   <script>
     const proxyUrl = "./api/weather";
+    const DEFAULT_CITY = "Bangalore"; // neutral documented default; no geolocation is requested
 
+    const searchForm = document.querySelector(".search");
     const searchBox = document.querySelector(".search input");
     const searchBtn = document.querySelector(".search button");
     const weatherIcon = document.querySelector(".weather-icon");
+    const errorBox = document.querySelector(".error");
+    const weatherBox = document.querySelector(".weather");
 
-    async function checkWeather(city) {
-      const response = await fetch(proxyUrl + "?city=" + encodeURIComponent(city));
-      if(response.status == 404) {
-        document.querySelector(".error").style.display = "block";
-        document.querySelector(".weather").style.display = "none";
-        return;
-      }
-      const data = await response.json();
+    let requestInFlight = false;
 
-      /*console.log(data);*/ /* we can't see entire data in console, so commenting it out */
-
-      document.querySelector(".city").innerHTML = data.name;
-      document.querySelector(".temp").innerHTML = Math.round(data.main.temp) + "°C";
-      document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
-      document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
-
-      const condition = data.weather[0].main;
-
-      if (condition === "Clouds") {
-        weatherIcon.src = "./clouds.png";
-      } else if (condition === "Clear") {
-        weatherIcon.src = "./clear.png";
-      } else if (condition === "Rain") {
-        weatherIcon.src = "./rain.png";
-      } else if (condition === "Drizzle") {
-        weatherIcon.src = "./drizzle.png";
-      } else if (condition === "Mist") {
-        weatherIcon.src = "./mist.png";
-      } else if (condition === "Thunderstorm") {
-        weatherIcon.src = "./rain.png"; // no dedicated thunderstorm asset — rain is the closest existing icon
-      } else if (condition === "Snow") {
-        weatherIcon.src = "./snow.png";
-      } else {
-        weatherIcon.src = "./clouds.png"; // fallback for any other condition (image exists)
-      }
-      /* to see the search bar and when we enter a city name, it should show the weather of that city */
-      document.querySelector(".weather").style.display = "block";
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.style.display = "block";
+      weatherBox.style.display = "none";
     }
 
-    searchBtn.addEventListener("click", () => {
+    async function checkWeather(city) {
+      if (requestInFlight) return; // one lookup at a time — extra submits while loading are ignored
+      requestInFlight = true;
+      searchBtn.disabled = true;
+
+      try {
+        const response = await fetch(proxyUrl + "?city=" + encodeURIComponent(city || DEFAULT_CITY));
+        if (response.status === 404) {
+          showError("City not found");
+          return;
+        }
+        if (!response.ok) {
+          // server/configuration errors come back generic from the proxy —
+          // no provider payloads or metadata are ever shown here
+          showError("Weather service is unavailable. Please try again.");
+          return;
+        }
+        const data = await response.json();
+
+        document.querySelector(".city").textContent = data.name;
+        document.querySelector(".temp").textContent = Math.round(data.main.temp) + "°C";
+        document.querySelector(".humidity").textContent = data.main.humidity + "%";
+        document.querySelector(".wind").textContent = data.wind.speed + " km/h";
+
+        const condition = data.weather[0].main;
+        const mistConditions = ["Mist", "Fog", "Haze", "Smoke", "Dust", "Sand", "Ash"];
+
+        if (condition === "Clouds") {
+          weatherIcon.src = "./clouds.png";
+        } else if (condition === "Clear") {
+          weatherIcon.src = "./clear.png";
+        } else if (condition === "Rain") {
+          weatherIcon.src = "./rain.png";
+        } else if (condition === "Drizzle") {
+          weatherIcon.src = "./drizzle.png";
+        } else if (mistConditions.includes(condition)) {
+          weatherIcon.src = "./mist.png";
+        } else if (condition === "Thunderstorm") {
+          weatherIcon.src = "./rain.png"; // no dedicated thunderstorm asset — rain is the closest existing icon
+        } else if (condition === "Snow") {
+          weatherIcon.src = "./snow.png";
+        } else {
+          weatherIcon.src = "./clouds.png"; // fallback for any other condition (image exists)
+        }
+        weatherBox.style.display = "block";
+      } catch {
+        // network failure or malformed local fetch target — generic message
+        showError("Weather service is unavailable. Please try again.");
+      } finally {
+        requestInFlight = false;
+        searchBtn.disabled = false;
+      }
+    }
+
+    searchForm.addEventListener("submit", (event) => {
+      event.preventDefault(); // Enter submits the search without reloading the page
       checkWeather(searchBox.value);
     });
 
-    checkWeather(); // default city
+    checkWeather(DEFAULT_CITY);
   </script>
 </body>
 </html>

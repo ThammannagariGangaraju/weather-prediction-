@@ -6,13 +6,16 @@ No frameworks, no build step. Weather requests run through a small server-side p
 
 ## What It Provides
 
-- **City search** — type a city name and press the search button.
+- **City search** — type a city name and press the search button or press **Enter** in the field.
+- **Default city** — the app opens showing current weather for **Bangalore** (plain constant, documented; no geolocation permission is ever requested).
 - **Current conditions** on a single card:
   - temperature in °C (metric units),
   - humidity (%),
   - wind speed (km/h),
   - a weather-condition icon.
 - **"City not found" error state** for invalid or unknown cities.
+- **Safe error feedback** — provider/server outages surface a generic "Weather service is unavailable. Please try again." message; raw provider payloads are never shown.
+- **Loading state** — the search button is disabled while a lookup is in flight; repeated clicks during the request are ignored.
 
 > Despite the project name, this shows the **current weather** (it does not yet forecast future conditions).
 
@@ -36,7 +39,7 @@ Condition icons live in the repository root and are switched in JavaScript based
 | Clouds         | `clouds.png`  |                                                  |
 | Rain           | `rain.png`    |                                                  |
 | Drizzle        | `drizzle.png` |                                                  |
-| Mist           | `mist.png`    |                                                  |
+| Mist (family)  | `mist.png`    | includes Fog, Haze, Smoke, Dust, Sand, Ash       |
 | Thunderstorm   | `rain.png`    | no dedicated thunderstorm asset — rain is reused |
 | Snow           | `snow.png`    | dedicated snow icon                              |
 | any other      | `clouds.png`  | fallback for unmapped conditions                 |
@@ -95,12 +98,10 @@ npx wrangler pages dev .
 # then open the printed localhost URL and search a city
 ```
 
-Then type a city name (e.g. *Bangalore*, *London*) and press the search button.
+Then type a city name (e.g. *Bangalore*, *London*) and press the search button or press **Enter**.
 
 ## Known Issues
 
-- **No default city on load** — the page calls `checkWeather()` without a city, so the weather card stays hidden and only appears after a successful search.
-- **Search is button-only** — the search button is the only trigger (there is no Enter-key handler on the input).
 - **Thunderstorm has no dedicated icon** — it currently reuses `rain.png`; a dedicated asset could be added later.
 - **Legacy key exposure in Git history** — an earlier revision of this app embedded an OpenWeatherMap key directly in `index.html`, and that value remains in the repository's commit history. The key is **rotated/revocable only in the OpenWeatherMap dashboard** — the server-side move does not undo the historical exposure. Anyone who already saw the old key can keep using it until it is revoked; rotating the key is the property owner's manual step and is not done by code changes.
 

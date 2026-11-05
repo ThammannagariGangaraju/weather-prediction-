@@ -49,6 +49,16 @@ body{
     cursor: pointer;
 
 }
+.search button:disabled{
+    opacity: .6;
+    cursor: default;
+}
+/* keyboard focus is always visible (input and button) */
+.search input:focus-visible,
+.search button:focus-visible{
+    outline: 2px solid rgba(255, 255, 255, .85);
+    outline-offset: 2px;
+}
 .search button img{
     width:16px;
 }
