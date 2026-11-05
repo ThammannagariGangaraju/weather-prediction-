@@ -2,7 +2,7 @@
 
 A responsive weather interface built with plain **HTML, CSS, and JavaScript** — search any city and see its current weather at a glance, with a focus on clear presentation and ease of use.
 
-No frameworks, no build step: clone it, open it, search.
+No frameworks, no build step. Weather requests run through a small server-side proxy (a Cloudflare Pages Function) so the API key never touches the browser.
 
 ## What It Provides
 
@@ -18,9 +18,13 @@ No frameworks, no build step: clone it, open it, search.
 
 ## Data Source
 
-The **[OpenWeatherMap Current Weather API](https://openweathermap.org/current)** (`api.openweathermap.org/data/2.5/weather`, `units=metric`), called directly from the browser with `fetch`.
+The **[OpenWeatherMap Current Weather API](https://openweathermap.org/current)** (`api.openweathermap.org/data/2.5/weather`, `units=metric`) — called through a **server-side proxy**, never directly from the browser:
 
-`index.html` contains an OpenWeatherMap API key so the app runs out of the box; replace it with your own free key from [openweathermap.org](https://openweathermap.org/api) if needed.
+- The frontend sends its search to `GET /api/weather?city=<name>` (a [Cloudflare Pages Function](https://developers.cloudflare.com/pages/functions/) in `functions/api/weather.js`).
+- The proxy adds the OpenWeatherMap key server-side from the `OPENWEATHER_API_KEY` environment secret and returns the same data JSON the UI parses.
+- The key is never present in the browser, the response bodies, or this repository.
+
+**Configuration:** set `OPENWEATHER_API_KEY` as an environment variable on your Cloudflare Pages project (Production *and* Preview). To get a key, sign up (free) at [openweathermap.org](https://openweathermap.org/api). See [.env.example](.env.example) for the variable name; the file contains a placeholder only.
 
 ## Weather Icons
 
@@ -39,12 +43,13 @@ Condition icons live in the repository root and are switched in JavaScript based
 
 ## Tech Stack
 
-| Component   | Technology                  |
-| ----------- | ---------------------------- |
-| Structure   | HTML                         |
-| Styling     | CSS (custom, no frameworks)  |
-| Logic       | Vanilla JavaScript (`fetch`) |
-| Data source | OpenWeatherMap API           |
+| Component   | Technology                                 |
+| ----------- | -------------------------------------------- |
+| Structure   | HTML                                         |
+| Styling     | CSS (custom, no frameworks)                  |
+| Logic       | Vanilla JavaScript (`fetch`)                 |
+| Data source | OpenWeatherMap API via `/api/weather` proxy  |
+| Proxy       | Cloudflare Pages Function (`functions/api`)  |
 
 ## Repository Structure
 
@@ -59,25 +64,35 @@ Condition icons live in the repository root and are switched in JavaScript based
 ├── rain.png
 ├── search.png
 ├── snow.png
-└── wind.png
+├── wind.png
+├── functions/
+│   └── api/
+│       └── weather.js    # Cloudflare Pages Function — server-side weather proxy
+├── .env.example          # documents the OPENWEATHER_API_KEY variable (placeholder only)
+└── .gitignore            # keeps .env / .dev.vars and other local secrets out of git
 ```
 
 ## Installation & Running
 
-Requirements: any modern browser. No dependencies, no build step.
+Requirements: any modern browser for the UI — plus the deployed proxy for weather data, because the OpenWeatherMap key lives server-side. **Opening `index.html` directly from the filesystem will load the page but weather lookups will not work** without the `/api/weather` endpoint behind it.
+
+### Deploy on Cloudflare Pages
+
+1. Push this repository to GitHub (it already is).
+2. In the [Cloudflare dashboard](https://dash.cloudflare.com), go to **Workers & Pages → Create → Pages → Connect to Git** and select this repository.
+3. Build settings: no build command, output directory `/` (root). Functions in `functions/` are picked up automatically and exposed at `/api/weather`.
+4. Under the Pages project, open **Settings → Environment variables** and add `OPENWEATHER_API_KEY` (your own free OpenWeatherMap key) for **Production** and **Preview**.
+5. Deploy. The site is then served by Cloudflare with the working proxy.
+
+### Local development (optional)
 
 ```bash
 git clone https://github.com/ThammannagariGangaraju/weather-prediction-.git
 cd weather-prediction-
-```
-
-**Option 1 — open directly:** double-click `index.html`.
-
-**Option 2 — local server:**
-
-```bash
-python -m http.server 8000
-# then open http://localhost:8000
+# put your own key in .dev.vars (git-ignored; see .env.example for the name):
+#   OPENWEATHER_API_KEY=your_own_key_here
+npx wrangler pages dev .
+# then open the printed localhost URL and search a city
 ```
 
 Then type a city name (e.g. *Bangalore*, *London*) and press the search button.
@@ -87,9 +102,9 @@ Then type a city name (e.g. *Bangalore*, *London*) and press the search button.
 - **No default city on load** — the page calls `checkWeather()` without a city, so the weather card stays hidden and only appears after a successful search.
 - **Search is button-only** — the search button is the only trigger (there is no Enter-key handler on the input).
 - **Thunderstorm has no dedicated icon** — it currently reuses `rain.png`; a dedicated asset could be added later.
-- **Hardcoded, publicly exposed API key** — the OpenWeatherMap key ships inline in `index.html` and is visible to anyone who clones or reads this repository. It should be **rotated** and moved to a server-side environment variable or backend proxy; shipping the key inside frontend code (or a frontend "environment variable") is not secure.
+- **Legacy key exposure in Git history** — an earlier revision of this app embedded an OpenWeatherMap key directly in `index.html`, and that value remains in the repository's commit history. The key is **rotated/revocable only in the OpenWeatherMap dashboard** — the server-side move does not undo the historical exposure. Anyone who already saw the old key can keep using it until it is revoked; rotating the key is the property owner's manual step and is not done by code changes.
 
-> This README documents the current source including the corrected icon paths and complete condition mapping in `index.html`. The icon-path and condition-mapping fix is published in the same commit as this README.
+> This README documents the current source, including the corrected icon paths and complete condition mapping in `index.html` (published together with this README's first version) and the server-side weather proxy.
 
 ## Limitations & Future Improvements
 

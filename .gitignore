@@ -1,0 +1,9 @@
+# Secrets — never commit real keys
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# Cloudflare / tooling
+.wrangler/
+node_modules/
