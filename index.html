@@ -11,26 +11,26 @@
     <div class="search">
       <input type="text" placeholder="Enter city name" spellcheck="false" />
       <button>
-        <img src="images/search.png" alt="Search" />
+        <img src="./search.png" alt="Search" />
       </button>
     </div>
     <div class="error">City not found</div>
 
     <div class="weather"> <!-- lowercase 'weather' -->
-      <img src="images/rain.png" class="weather-icon" alt="Weather Icon" />
+      <img src="./rain.png" class="weather-icon" alt="Weather Icon" />
       <h1 class="temp">22°C</h1>
       <h2 class="city">Bangalore</h2>
 
       <div class="details">
         <div class="col">
-          <img src="images/humidity.png" alt="Humidity" />
+          <img src="./humidity.png" alt="Humidity" />
           <div>
             <p class="humidity">50%</p>
             <p>Humidity</p>
           </div>
         </div>
         <div class="col">
-          <img src="images/wind.png" alt="Wind Speed" />
+          <img src="./wind.png" alt="Wind Speed" />
           <div>
             <p class="wind">15 km/h</p> <!-- fixed class name -->
             <p>Wind Speed</p>
@@ -67,17 +67,21 @@
       const condition = data.weather[0].main;
 
       if (condition === "Clouds") {
-        weatherIcon.src = "images/clouds.png";
+        weatherIcon.src = "./clouds.png";
       } else if (condition === "Clear") {
-        weatherIcon.src = "images/clear.png";
+        weatherIcon.src = "./clear.png";
       } else if (condition === "Rain") {
-        weatherIcon.src = "images/rain.png";
+        weatherIcon.src = "./rain.png";
       } else if (condition === "Drizzle") {
-        weatherIcon.src = "images/drizzle.png";
+        weatherIcon.src = "./drizzle.png";
       } else if (condition === "Mist") {
-        weatherIcon.src = "images/mist.png";
+        weatherIcon.src = "./mist.png";
+      } else if (condition === "Thunderstorm") {
+        weatherIcon.src = "./rain.png"; // no dedicated thunderstorm asset — rain is the closest existing icon
+      } else if (condition === "Snow") {
+        weatherIcon.src = "./snow.png";
       } else {
-        weatherIcon.src = "images/default.png"; // fallback image
+        weatherIcon.src = "./clouds.png"; // fallback for any other condition (image exists)
       }
       /* to see the search bar and when we enter a city name, it should show the weather of that city */
       document.querySelector(".weather").style.display = "block";
