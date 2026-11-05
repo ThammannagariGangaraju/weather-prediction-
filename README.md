@@ -89,7 +89,7 @@ Then type a city name (e.g. *Bangalore*, *London*) and press the search button.
 - **Thunderstorm has no dedicated icon** — it currently reuses `rain.png`; a dedicated asset could be added later.
 - **Hardcoded, publicly exposed API key** — the OpenWeatherMap key ships inline in `index.html` and is visible to anyone who clones or reads this repository. It should be **rotated** and moved to a server-side environment variable or backend proxy; shipping the key inside frontend code (or a frontend "environment variable") is not secure.
 
-> This README documents the current source including the corrected icon paths and complete condition mapping in `index.html`. Those source changes and this README are ready to publish together; **nothing has been pushed yet** — deployment status mirrors the repository, which still serves the pre-fix files until both are pushed.
+> This README documents the current source including the corrected icon paths and complete condition mapping in `index.html`. The icon-path and condition-mapping fix is published in the same commit as this README.
 
 ## Limitations & Future Improvements
 
